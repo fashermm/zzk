@@ -18,5 +18,6 @@ int main()
     pi *= 4.0;
 
     printf("π ≈ %.5f\n", pi);
+    printf("你好!!!!");
     return 0;
 }
