@@ -19,5 +19,6 @@ int main()
 
     printf("π ≈ %.5f\n", pi);
     printf("你好!!!!");
+    printf("nihao hello!!!");
     return 0;
 }
