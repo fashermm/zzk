@@ -128,9 +128,7 @@ const tableData = [
     timeXuegi: "6"
   }
 ];
-// const handleClick=()=>{
-//
-// }
+const handleClick = () => {};
 const confirmEvent = () => {
   alert("删除成功！！"); //还得写一个删除事件
 };

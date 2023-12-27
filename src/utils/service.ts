@@ -9,7 +9,7 @@ import { getToken } from "./cache/cookies"
 */
 
 /** 退出登录并强制刷新页面（会重定向到登录页） */
-function logout() {
+export function logout() {
   useUserStoreHook().logout()
   location.reload()
 }
@@ -124,3 +124,4 @@ function createRequest(service: AxiosInstance) {
 const service = createService()
 /** 用于网络请求的方法 */
 export const request = createRequest(service)
+
