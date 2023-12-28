@@ -15,7 +15,10 @@ function logout() {
 /** 创建请求实例 */
 function createService() {
   // 创建一个 axios 实例命名为 service
-  const service = axios.create();
+  const service = axios.create({
+    // baseURL: import.meta.env.VITE_BASE_API,
+    responseType: "json"
+  });
   // 请求拦截
   service.interceptors.request.use(
     (config) => {
@@ -40,24 +43,24 @@ function createService() {
       const responseType = response.request?.responseType;
       if (responseType === "blob" || responseType === "arraybuffer") return apiData;
       // 这个 code 是和后端约定的业务 code
-      const code = apiData.code;
+      // const code = apiData.code;
       // 如果没有 code, 代表这不是项目后端开发的 api
-      if (code === undefined) {
-        ElMessage.error("非本系统的接口");
-        return Promise.reject(new Error("非本系统的接口"));
-      }
-      switch (code) {
-        case 0:
-          // 本系统采用 code === 0 来表示没有业务错误
-          return apiData;
-        case 401:
-          // Token 过期时
-          return logout();
-        default:
-          // 不是正确的 code
-          ElMessage.error(apiData.message || "Error");
-          return Promise.reject(new Error("Error"));
-      }
+      // if (code === undefined) {
+      //   ElMessage.error("非本系统的接口");
+      //   return Promise.reject(new Error("非本系统的接口"));
+      // }
+      // switch (code) {
+      //   case 0:
+      //     // 本系统采用 code === 0 来表示没有业务错误
+      //     return apiData;
+      //   case 401:
+      //     // Token 过期时
+      //     return logout();
+      //   default:
+      //     // 不是正确的 code
+      //     ElMessage.error(apiData.message || "Error");
+      //     return Promise.reject(new Error("Error"));
+      // }
     },
     (error) => {
       // status 是 HTTP 状态码
@@ -154,13 +157,13 @@ export default {
     return request({ method: "get", ...option }) as Promise<ApiResponseData<T>>;
   },
   post: <T = any>(option: AxiosConfig) => {
-    return request({ method: "get", ...option }) as Promise<ApiResponseData<T>>;
+    return request({ method: "post", ...option }) as Promise<ApiResponseData<T>>;
   },
   delete: <T = any>(option: AxiosConfig) => {
-    return request({ method: "get", ...option }) as Promise<ApiResponseData<T>>;
+    return request({ method: "delete", ...option }) as Promise<ApiResponseData<T>>;
   },
   put: <T = any>(option: AxiosConfig) => {
-    return request({ method: "get", ...option }) as Promise<ApiResponseData<T>>;
+    return request({ method: "put", ...option }) as Promise<ApiResponseData<T>>;
   },
   cancelRequest: (url: string | string[]) => {
     return cancelRequest(url);
