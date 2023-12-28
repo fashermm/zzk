@@ -28,11 +28,13 @@ export const useUserStore = defineStore("user", () => {
     roles.value = value;
   };
   /** 登录 */
-  const login = async ({ username, password, code }: LoginRequestData, role: number) => {
+  const login = async ({ username, password }: LoginRequestData, role: number) => {
     // const { data } = await studentLoginAPI({ studentId: username, studenetPassword: password });
-    const { data } = await loginApi({ username, password, code })
+    const { data } = await loginApi({ username, password })
     setToken(data.token)
     token.value = data.token
+    console.log(token.value);
+    // Promise.resolve(data);
   };
   /** 获取用户详情 */
   const getInfo = async () => {
