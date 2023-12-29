@@ -41,6 +41,17 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
           changeOrigin: true
         }
       },
+      // proxy: {
+      //   "/api/*": {
+      //     target: "http://120.79.99.70:8080/api/",
+      //     ws: true,
+      //     /** 是否允许跨域 */
+      //     changeOrigin: true,
+      //     rewrite(path) {
+      //         return path.replace(/^\/api/,"")
+      //     },
+      //   }
+      // },
       /** 预热常用文件，提高初始页面加载速度 */
       warmup: {
         clientFiles: ["./src/layouts/**/*.vue"]

@@ -101,7 +101,7 @@ export const constantRoutes: RouteRecordRaw[] = [
       {
         path: "index",
         name: 'CheckIn',
-        component: ()=>import('@/views/lesson/index.vue'),
+        component: ()=>import('@/views/checkIn/index.vue'),
         meta: {
           title: '签到管理',
           svgIcon: 'menu',

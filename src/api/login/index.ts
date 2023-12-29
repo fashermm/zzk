@@ -25,16 +25,3 @@ export function getUserInfoApi() {
     method: "get"
   })
 }
-
-export function studentLoginAPI(){
-  return request({
-    url: 'student/regiter',
-    method:'post'
-  })
-}
-export function teacherLoginAPI(){
-  return request({
-    url: 'teacher/regiter',
-    method:'post'
-  })
-}

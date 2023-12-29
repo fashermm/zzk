@@ -1,27 +1,29 @@
 <!-- 注册组件 -->
 
 <script setup lang="ts">
-import { reactive, ref } from "vue"
-import { useRouter } from "vue-router"
-import { useUserStore } from "@/store/modules/user"
-import { type FormInstance, type FormRules } from "element-plus"
-import { Picture, Loading } from "@element-plus/icons-vue"
-import { getLoginCodeApi } from "@/api/login"
-import { type RegisterRequestData } from "@/api/login/types/login"
-import { STUDENT } from "@/constants/state"
+import { reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useUserStore } from "@/store/modules/user";
+import { type FormInstance, type FormRules } from "element-plus";
+import { Picture, Loading } from "@element-plus/icons-vue";
+import { getLoginCodeApi } from "@/api/login";
+import { type RegisterRequestData } from "@/api/login/types/login";
+import { STUDENT } from "@/constants/state";
 
 const props = defineProps({
   role: Number
-})
-const emits = defineEmits(['jumpToLogin'])
+});
+const emits = defineEmits(["jumpToLogin"]);
+
+const userStore = useUserStore();
 
 /** 注册表单元素的引用 */
-const registerFormRef = ref<FormInstance | null>(null)
+const registerFormRef = ref<FormInstance | null>(null);
 
 /** 注册按钮 Loading */
-const loading = ref(false)
+const loading = ref(false);
 /** 验证码图片 URL */
-const codeUrl = ref("")
+const codeUrl = ref("");
 /** 注册表单数据 */
 const registerFormDataDefault: RegisterRequestData = {
   id: "",
@@ -31,9 +33,8 @@ const registerFormDataDefault: RegisterRequestData = {
   professional: "",
   password: "",
   checkPassword: "",
-  code: ""
-}
-const registerFormData = reactive({ ...registerFormDataDefault })
+};
+const registerFormData = reactive({ ...registerFormDataDefault });
 /** 注册表单校验规则 */
 const registerFormRules: FormRules = {
   id: [{ required: true, message: "请输入账号", trigger: "blur" }],
@@ -46,49 +47,48 @@ const registerFormRules: FormRules = {
     { min: 8, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
   ],
   checkPassword: [{ required: true, message: "再次确认密码", trigger: "blur" }],
-  code: [{ required: true, message: "请输入验证码", trigger: "blur" }]
-}
+};
 /** 注册逻辑 */
 const handleRegister = () => {
   registerFormRef.value?.validate((valid: boolean, fields) => {
     if (valid) {
-      loading.value = true
-      useUserStore()
-        .register(registerFormData)
+      loading.value = true;
+      userStore
+        .register(registerFormData, props.role!)
         .then(() => {
           /* 注册完成 */
-          emits('jumpToLogin');
+          emits("jumpToLogin");
         })
         .catch(() => {
-          createCode()
-          registerFormData.password = ""
+          // createCode();
+          registerFormData.password = "";
         })
         .finally(() => {
-          loading.value = false
-        })
+          loading.value = false;
+        });
     } else {
-      console.error("表单校验不通过", fields)
+      console.error("表单校验不通过", fields);
     }
-  })
-}
+  });
+};
 /** 创建验证码 */
-const createCode = () => {
-  // 先清空验证码的输入
-  registerFormData.code = ""
-  // 获取验证码
-  codeUrl.value = ""
-  getLoginCodeApi().then((res) => {
-    codeUrl.value = res.data
-  })
-}
+// const createCode = () => {
+//   // 先清空验证码的输入
+//   registerFormData.code = "";
+//   // 获取验证码
+//   codeUrl.value = "";
+//   getLoginCodeApi().then((res) => {
+//     codeUrl.value = res.data;
+//   });
+// };
 
-/** 初始化验证码 */
-createCode()
+// /** 初始化验证码 */
+// createCode();
 
 /* 暴露方法 */
 defineExpose({
-  handleRegister,
-})
+  handleRegister
+});
 </script>
 
 <template>
@@ -113,7 +113,13 @@ defineExpose({
         <el-input v-model.trim="registerFormData.colleges" placeholder="学院" type="text" tabindex="1" size="large" />
       </el-form-item>
       <el-form-item prop="professional" label="专业">
-        <el-input v-model.trim="registerFormData.professional" placeholder="专业" type="text" tabindex="1" size="large" />
+        <el-input
+          v-model.trim="registerFormData.professional"
+          placeholder="专业"
+          type="text"
+          tabindex="1"
+          size="large"
+        />
       </el-form-item>
       <el-form-item prop="password" label="密码">
         <el-input
@@ -126,32 +132,13 @@ defineExpose({
         />
       </el-form-item>
       <el-form-item prop="checkPassword" label="再次输入密码">
-        <el-input v-model.trim="registerFormData.checkPassword" placeholder="确认密码" type="text" tabindex="1" size="large" />
-      </el-form-item>
-      <el-form-item label="验证码" prop="code">
         <el-input
-          v-model.trim="registerFormData.code"
-          placeholder="验证码"
+          v-model.trim="registerFormData.checkPassword"
+          placeholder="确认密码"
           type="text"
-          tabindex="3"
-          maxlength="7"
+          tabindex="1"
           size="large"
-        >
-          <template #append>
-            <el-image :src="codeUrl" @click="createCode" draggable="false">
-              <template #placeholder>
-                <el-icon>
-                  <Picture />
-                </el-icon>
-              </template>
-              <template #error>
-                <el-icon>
-                  <Loading />
-                </el-icon>
-              </template>
-            </el-image>
-          </template>
-        </el-input>
+        />
       </el-form-item>
     </el-form>
   </div>
