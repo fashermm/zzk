@@ -1,0 +1,22 @@
+@charset "UTF-8";
+/** 自定义 Vxe Table 样式 */
+.vxe-grid--form-wrapper .vxe-form {
+  padding: 10px 20px !important;
+  margin-bottom: 20px !important;
+}
+.vxe-grid--toolbar-wrapper .vxe-toolbar {
+  padding: 20px !important;
+}
+.vxe-grid--pager-wrapper .vxe-pager {
+  height: 70px !important;
+  padding: 0 20px !important;
+}
+@media screen and (max-width: 768px) {
+  .vxe-grid--pager-wrapper .vxe-pager--wrapper .vxe-pager--total,
+  .vxe-grid--pager-wrapper .vxe-pager--wrapper .vxe-pager--sizes,
+  .vxe-grid--pager-wrapper .vxe-pager--wrapper .vxe-pager--jump,
+  .vxe-grid--pager-wrapper .vxe-pager--wrapper .vxe-pager--jump-prev,
+  .vxe-grid--pager-wrapper .vxe-pager--wrapper .vxe-pager--jump-next {
+    display: none !important;
+  }
+}/*# sourceMappingURL=vxe-table.css.map */

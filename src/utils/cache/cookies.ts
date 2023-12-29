@@ -7,6 +7,7 @@ export const getToken = () => {
   return Cookies.get(CacheKey.TOKEN)
 }
 export const setToken = (token: string) => {
+  // console.log(CacheKey.TOKEN)
   Cookies.set(CacheKey.TOKEN, token)
 }
 export const removeToken = () => {

@@ -26,8 +26,8 @@ const loading = ref(false);
 const codeUrl = ref("");
 /** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
-  username: "admin",
-  password: "12345678",
+  username: "",
+  password: "",
 });
 /** 登录表单校验规则 */
 const loginFormRules: FormRules = {

@@ -4,6 +4,7 @@ import { get, merge } from "lodash-es";
 
 import { useUserStoreHook } from "@/store/modules/user";
 import { getToken } from "@/utils/cache/cookies";
+import { showMessage } from "@/utils/showMessage";
 
 const abortControllerMap: Map<string, AbortController> = new Map();
 
@@ -16,9 +17,11 @@ function logout() {
 function createService() {
   // 创建一个 axios 实例命名为 service
   const service = axios.create({
-    // baseURL: import.meta.env.VITE_BASE_API,
-    responseType: "json"
+    baseURL: import.meta.env.VITE_BASE_API,
+    responseType: "json",
+    timeout: 300000
   });
+  service.defaults.withCredentials = true;
   // 请求拦截
   service.interceptors.request.use(
     (config) => {
@@ -26,6 +29,7 @@ function createService() {
       const url = config.url || "";
       config.signal = config.signal;
       abortControllerMap.set(url, controller);
+      console.log(config);
       return config;
     },
     // 发送失败
@@ -42,26 +46,15 @@ function createService() {
       // 二进制数据则直接返回
       const responseType = response.request?.responseType;
       if (responseType === "blob" || responseType === "arraybuffer") return apiData;
-      return apiData.data;
-      // 这个 code 是和后端约定的业务 code
-      // const code = apiData.code;
-      // 如果没有 code, 代表这不是项目后端开发的 api
-      // if (code === undefined) {
-      //   ElMessage.error("非本系统的接口");
-      //   return Promise.reject(new Error("非本系统的接口"));
-      // }
-      // switch (code) {
-      //   case 0:
-      //     // 本系统采用 code === 0 来表示没有业务错误
-      //     return apiData;
-      //   case 401:
-      //     // Token 过期时
-      //     return logout();
-      //   default:
-      //     // 不是正确的 code
-      //     ElMessage.error(apiData.message || "Error");
-      //     return Promise.reject(new Error("Error"));
-      // }
+      const code = apiData.code;
+      if (code === 0) {
+        console.log(response, apiData);
+        console.log(response.headers["set-cookie"], document.cookie);
+        return apiData;
+      } else {
+        showMessage(apiData.description || apiData.message, "error");
+        return Promise.reject(new Error(apiData.description || apiData.message));
+      }
     },
     (error) => {
       // status 是 HTTP 状态码
@@ -121,7 +114,7 @@ function createRequest(service: AxiosInstance) {
       headers: {
         // 携带 Token
         Authorization: token ? `Bearer ${token}` : undefined,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       timeout: 5000,
       baseURL: import.meta.env.VITE_BASE_API,

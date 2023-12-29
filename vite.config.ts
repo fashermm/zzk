@@ -33,25 +33,26 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
       /** 端口被占用时，是否直接退出 */
       strictPort: false,
       /** 接口代理 */
-      proxy: {
-        "/api/v1": {
-          target: "https://www.fastmock.site/mock/761e2dda2b8890ab86c928a74e8f6538",
-          ws: true,
-          /** 是否允许跨域 */
-          changeOrigin: true
-        }
-      },
       // proxy: {
-      //   "/api/*": {
-      //     target: "http://120.79.99.70:8080/api/",
+      //   "/api/v1": {
+      //     target: "https://www.fastmock.site/mock/761e2dda2b8890ab86c928a74e8f6538",
       //     ws: true,
       //     /** 是否允许跨域 */
-      //     changeOrigin: true,
-      //     rewrite(path) {
-      //         return path.replace(/^\/api/,"")
-      //     },
+      //     changeOrigin: true
       //   }
       // },
+      proxy: {
+        "/api": {
+          target: "http://120.79.99.70:7777/api",
+          ws: true,
+          /** 是否允许跨域 */
+          changeOrigin: true,
+          rewrite(path) {
+              console.log(path.replace(/^\/api/,""))
+              return path.replace(/^\/api/,"")
+          },
+        }
+      },
       /** 预热常用文件，提高初始页面加载速度 */
       warmup: {
         clientFiles: ["./src/layouts/**/*.vue"]
