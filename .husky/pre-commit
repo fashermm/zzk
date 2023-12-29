@@ -1,4 +1,12 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npx lint-staged
+node_modules/.bin/lint-staged
+# npx lint-staged
+# npx lint-staged
+
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# npx --no-install commitlint --edit
+# node_modules/.bin/commitlint --edit
