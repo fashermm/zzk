@@ -4,10 +4,10 @@ export function teacherLoginAPI({ teacherId, teacherPassword }: any) {
   return request.post({ url: "/teacher/login", data: { teacherId, teacherPassword } });
 }
 
-export function teacherRegisterAPI({ checkPassword, name, professional, sex, teacherId, teacherPassword }: any) {
+export function teacherRegisterAPI({ checkPassword, name, colleges, professional, sex, teacherId, teacherPassword }: any) {
   return request.post({
     url: "/teacher/register",
-    data: { checkPassword, name, professional, sex, teacherId, teacherPassword }
+    data: { checkPassword, name, professional, sex, teacherId, colleges, teacherPassword }
   });
 }
 

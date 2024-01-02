@@ -10,7 +10,7 @@ import { loginApi, getUserInfoApi } from "@/api/login";
 import { RegisterRequestData, type LoginRequestData } from "@/api/login/types/login";
 import { type RouteRecordRaw } from "vue-router";
 import routeSettings from "@/config/route";
-import { studentInfoAPI, studentLoginAPI, studentRegisterAPI, studentUpdateAPI } from "@/api/student";
+import { studentInfoAPI, studentLoginAPI, studentLogoutAPI, studentRegisterAPI, studentUpdateAPI } from "@/api/student";
 import { STUDENT } from "@/constants/state";
 import { teacherInfoAPI, teacherLoginAPI, teacherRegisterAPI, teacherUpdateAPI } from "@/api/teacher";
 
@@ -70,7 +70,7 @@ export const useUserStore = defineStore("user", () => {
         });
         console.log(cookieString, cookies, cookieMap);
         teacherInfo.value = { ...res.data };
-        setRoles(studentInfo.value.role);
+        setRoles(teacherInfo.value.role);
         setToken("1");
       });
       return Promise.resolve("success");
@@ -114,8 +114,8 @@ export const useUserStore = defineStore("user", () => {
     } else {
       const data = await teacherRegisterAPI({
         ...res,
-        studentId: res.id,
-        studentPassword: res.password
+        teacherId: res.id,
+        teacherPassword: res.password
       });
       console.log(data);
     }
@@ -128,6 +128,7 @@ export const useUserStore = defineStore("user", () => {
     roles.value = -1;
     resetRouter();
     _resetTagsView();
+    studentLogoutAPI();
   };
   /** 重置 Token */
   const resetToken = () => {

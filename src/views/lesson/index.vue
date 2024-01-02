@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import { lessonData } from "./data";
 import { STUDENT, TEACHER } from "@/constants/state";
+import { useLessonStore } from "@/store/modules/lesson";
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/store/modules/user";
+import { showMessage } from "@/utils/showMessage";
 
 const tableData = lessonData;
-const role = ref(TEACHER);
+
+const userStore = useUserStore();
+const lessonStore = useLessonStore();
+const { lessonList } = storeToRefs(lessonStore);
+const role = userStore.roles;
 
 //开设课程弹窗
 const showAddCourseDialog = ref(false);
@@ -12,14 +20,10 @@ const showEditCourseDialog = ref(false);
 const showJoinCourseDialog = ref(false);
 const formLabelWidth = "140px";
 
-const form = reactive({
-  classId: "",
-  className: "",
-  studentName: "",
-  teacherName: "",
-  courseName: "",
+const lessonForm = reactive({
+  name: "",
   timeYear: "",
-  timeXuegi: ""
+  timeXueqi: ""
 });
 const editLessonForm = reactive({
   newCourseName: "",
@@ -28,19 +32,25 @@ const editLessonForm = reactive({
 });
 
 const changeRole = () => {
-  role.value = role.value === STUDENT ? TEACHER : STUDENT;
+  // role = role === STUDENT ? TEACHER : STUDENT;
 };
 
 /**
  * @description teacher
  */
 
-const confirmDelete = () => {
-  alert("删除成功！！"); //还得写一个删除事件
+const confirmDeleteLesson = (className: any) => {
+  // alert("删除成功！！"); //还得写一个删除事件
+  // console.log("confirm del", data);
+  lessonStore.deleteLesson({ className }).then(() => {
+    showMessage("移出成功", "success");
+  });
 };
+
 const cancelDelete = () => {
-  alert("取消删除");
+  console.log("取消删除");
 };
+
 const changeEditDialog = (flag: undefined | boolean = undefined) => {
   if (flag !== undefined) {
     showEditCourseDialog.value = flag;
@@ -48,8 +58,15 @@ const changeEditDialog = (flag: undefined | boolean = undefined) => {
     showEditCourseDialog.value = !showEditCourseDialog.value;
   }
 };
-const addLesson = () => {};
-const editLesson = () => {};
+
+const addLesson = () => {
+  console.log("addLesson", lessonForm);
+  lessonStore.createLesson(lessonForm);
+};
+
+const editLesson = () => {
+  lessonStore.editLesson(editLessonForm);
+};
 
 /**
  * @description student
@@ -57,9 +74,28 @@ const editLesson = () => {};
 const openJoinDialog = () => {
   showJoinCourseDialog.value = true;
 };
-const JoinLesson = () => {
+
+const joinLesson = (className: any, teacherName: string = "xxx") => {
   showJoinCourseDialog.value = false;
+  lessonStore.joinLesson({ className, teacherName }).then(() => {
+    showMessage("加入班级成功", "success");
+  });
 };
+
+const confirmQuit = (className: any) => {
+  lessonStore.quitLesson({ className });
+};
+
+const cancelExit = () => {
+  // showEditCourseDialog.value = false;
+};
+
+onMounted(async () => {
+  if (!lessonList.value || !lessonList.value.length) {
+    console.log("onMounted", role);
+    await lessonStore.getLesson();
+  }
+});
 </script>
 
 <template>
@@ -68,7 +104,7 @@ const JoinLesson = () => {
       <el-button v-if="role === TEACHER" @click="showAddCourseDialog = true" type="primary"> 开设课程 </el-button>
       <el-button v-else type="primary" @click="openJoinDialog">加入班级</el-button>
     </div>
-    <el-button @click="changeRole">Test</el-button>
+    <!-- <el-button @click="changeRole">Test</el-button> -->
     <div v-if="role === TEACHER" class="table1">
       <el-table :data="tableData" style="width: 100%">
         <el-table-column fixed prop="classId" label="班级编号" />
@@ -79,9 +115,13 @@ const JoinLesson = () => {
         <el-table-column prop="timeYear" label="开设学年" />
         <el-table-column prop="timeXuegi" label="开设学期" />
         <el-table-column prop="" label="操作">
-          <template #default>
-            <el-button link size="small" @click="changeEditDialog()" class="button1">编辑</el-button>
-            <el-popconfirm title="确认取消开设该课程？" @confirm="confirmDelete" @cancel="cancelDelete">
+          <template #default="scope">
+            <el-button link size="small" @click="changeEditDialog(true)" class="button1">编辑</el-button>
+            <el-popconfirm
+              title="确认取消开设该课程？"
+              @confirm="confirmDeleteLesson(scope.row.className)"
+              @cancel="cancelDelete"
+            >
               <template #reference>
                 <el-button link type="danger" size="small" class="button2">删除 </el-button>
               </template>
@@ -100,11 +140,11 @@ const JoinLesson = () => {
         <el-table-column prop="timeYear" label="开设学年" />
         <el-table-column prop="timeXuegi" label="开设学期" />
         <el-table-column label="操作">
-          <template #default>
+          <template #default="scope">
             <el-button link size="small" @click="changeEditDialog()" class="button1">编辑</el-button>
-            <el-popconfirm title="确认取消开设该课程？" @confirm="confirmDelete" @cancel="cancelDelete">
+            <el-popconfirm title="确认退出该课程？" @confirm="confirmQuit(scope.row.className)" @cancel="cancelExit">
               <template #reference>
-                <el-button link type="danger" size="small" class="button2">删除 </el-button>
+                <el-button link type="danger" size="small" class="button2"> 退出 </el-button>
               </template>
             </el-popconfirm>
           </template>
@@ -113,24 +153,15 @@ const JoinLesson = () => {
     </div>
 
     <el-dialog v-model="showAddCourseDialog" title="新增课程" style="width: 30rem">
-      <el-form :model="form">
-        <el-form-item label="班级编号" :label-width="formLabelWidth">
-          <el-input v-model="form.classId" style="width: 12rem" autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="班级名字" :label-width="formLabelWidth">
-          <el-input v-model="form.className" style="width: 12rem" autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="教师名字" :label-width="formLabelWidth">
-          <el-input v-model="form.teacherName" style="width: 12rem" autocomplete="off" />
-        </el-form-item>
+      <el-form :model="lessonForm">
         <el-form-item label="课程名称" :label-width="formLabelWidth">
-          <el-input v-model="form.courseName" style="width: 12rem" autocomplete="off" />
+          <el-input v-model="lessonForm.name" style="width: 12rem" autocomplete="off" />
         </el-form-item>
         <el-form-item label="开设学年" :label-width="formLabelWidth">
-          <el-input v-model="form.timeYear" style="width: 12rem" autocomplete="off" />
+          <el-input v-model="lessonForm.timeYear" style="width: 12rem" autocomplete="off" />
         </el-form-item>
         <el-form-item label="开设学期" :label-width="formLabelWidth">
-          <el-input v-model="form.timeXuegi" style="width: 12rem" autocomplete="off" />
+          <el-input v-model="lessonForm.timeXueqi" style="width: 12rem" autocomplete="off" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -140,7 +171,7 @@ const JoinLesson = () => {
         </span>
       </template>
     </el-dialog>
-    <el-dialog v-model="showEditCourseDialog" title="新增课程" style="width: 30rem">
+    <el-dialog v-model="showEditCourseDialog" title="编辑课程" style="width: 30rem">
       <el-form :model="editLessonForm">
         <el-form-item label="课程名称" :label-width="formLabelWidth">
           <el-input
@@ -181,7 +212,7 @@ const JoinLesson = () => {
           <el-input
             v-model="editLessonForm.newCourseName"
             style="width: 12rem"
-            placeholder="搜索课程名"
+            placeholder="请输入课程名"
             autocomplete="off"
           />
         </el-form-item>
@@ -201,7 +232,7 @@ const JoinLesson = () => {
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showJoinCourseDialog = false"> 取消 </el-button>
-          <el-button type="primary" @click="JoinLesson"> 确认 </el-button>
+          <el-button type="primary" @click="joinLesson"> 确认 </el-button>
         </span>
       </template>
     </el-dialog>
