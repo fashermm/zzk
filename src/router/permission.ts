@@ -21,9 +21,9 @@ router.beforeEach(async (to, _from, next) => {
   const permissionStore = usePermissionStoreHook();
   const token = getToken();
 
-  console.log(to, _from, document.cookie);
+  console.log(to, _from, document.cookie, userStore.roles);
   // 判断该用户是否已经登录
-  if (!document.cookie) {
+  if (userStore.roles === -1) {
     // 如果在免登录的白名单中，则直接进入
     if (isWhiteList(to)) {
       next();
@@ -35,6 +35,8 @@ router.beforeEach(async (to, _from, next) => {
     return;
   }
 
+  console.log(token, userStore.roles);
+
   // 如果已经登录，并准备进入 Login 页面，则重定向到主页
   if (to.path === "/login") {
     NProgress.done();
@@ -42,20 +44,23 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   // 如果用户已经获得其权限角色
-  if (userStore.roles.length !== 0) return next();
+  console.log(permissionStore.routes.length);
+  if (userStore.roles !== -1 && permissionStore.routes.length) return next();
 
   // 否则要重新获取权限角色
   try {
+    console.log(userStore.roles, "userStore");
     if (routeSettings.async) {
       // 注意：角色必须是一个数组！ 例如: ['admin'] 或 ['developer', 'editor']
-      await userStore.getInfo();
+      // await userStore.getInfo();
       const roles = userStore.roles;
+      console.log("roles", roles);
       // 根据角色生成可访问的 Routes（可访问路由 = 常驻路由 + 有访问权限的动态路由）
-      permissionStore.setRoutes(roles);
+      permissionStore.setRoutes();
     } else {
       // 没有开启动态路由功能，则启用默认角色
-      userStore.setRoles(routeSettings.defaultRoles);
-      permissionStore.setRoutes(routeSettings.defaultRoles);
+      userStore.setRoles(userStore.roles);
+      permissionStore.setRoutes();
     }
     // 将'有访问权限的动态路由' 添加到 Router 中
     permissionStore.dynamicRoutes.forEach((route) => router.addRoute(route));

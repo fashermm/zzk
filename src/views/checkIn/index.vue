@@ -72,6 +72,9 @@ const cancelDelete = () => {};
           <el-table-column prop="" label="开设时间" />
           <el-table-column prop="" label="结束时间" />
           <el-table-column prop="" label="签到状态" />
+          <el-table-column prop="" label="操作">
+            <el-button size="small" type="primary">签到 </el-button>
+          </el-table-column>
         </el-table>
       </div>
     </div>

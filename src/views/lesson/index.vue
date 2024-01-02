@@ -208,7 +208,7 @@ const JoinLesson = () => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .body {
   margin-top: 20px;
   margin-left: 20px;

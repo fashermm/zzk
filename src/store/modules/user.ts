@@ -10,13 +10,13 @@ import { loginApi, getUserInfoApi } from "@/api/login";
 import { RegisterRequestData, type LoginRequestData } from "@/api/login/types/login";
 import { type RouteRecordRaw } from "vue-router";
 import routeSettings from "@/config/route";
-import { studentInfoAPI, studentLoginAPI, studentRegisterAPI } from "@/api/student";
+import { studentInfoAPI, studentLoginAPI, studentRegisterAPI, studentUpdateAPI } from "@/api/student";
 import { STUDENT } from "@/constants/state";
-import { teacherInfoAPI, teacherLoginAPI, teacherRegisterAPI } from "@/api/teacher";
+import { teacherInfoAPI, teacherLoginAPI, teacherRegisterAPI, teacherUpdateAPI } from "@/api/teacher";
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "");
-  const roles = ref(0);
+  const roles = ref(-1);
   const username = ref<string>("");
 
   const studentInfo = ref({
@@ -30,7 +30,7 @@ export const useUserStore = defineStore("user", () => {
     name: "",
     professional: "",
     role: "",
-    sex: "",
+    colleges: "",
     teacherId: ""
   });
 
@@ -125,7 +125,7 @@ export const useUserStore = defineStore("user", () => {
   const logout = () => {
     removeToken();
     token.value = "";
-    roles.value = 0;
+    roles.value = -1;
     resetRouter();
     _resetTagsView();
   };
@@ -143,17 +143,48 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
+  /** 更新个人信息 */
+  const updateInfo = async (form: any) => {
+    if (roles.value === STUDENT) {
+      console.log('updateInfo', form);
+      studentUpdateAPI(form).then((res) => {
+        console.log(res);
+      });
+    } else {
+      teacherUpdateAPI(form).then(res => {
+        console.log(res);
+      })
+    }
+  };
+
+  /** 修改密码 */
+  const changePwd = async (pwdForm: any) => {
+    if(roles.value === STUDENT){
+      studentUpdateAPI(pwdForm).then(res=>{
+        console.log(res);
+      })
+    }else{
+      teacherUpdateAPI(pwdForm).then(res=>{
+        console.log(res);
+      })
+    }
+  };
+
   return {
     token,
     roles,
     username,
+    studentInfo,
+    teacherInfo,
     setRoles,
     login,
     getInfo,
     changeRoles,
     logout,
     resetToken,
-    register
+    register,
+    updateInfo,
+    changePwd
   };
 });
 

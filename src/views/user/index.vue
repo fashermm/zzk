@@ -1,28 +1,85 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { STUDENT, TEACHER } from "@/constants/state";
+import { useUserStore } from "@/store/modules/user";
+import { showMessage } from "@/utils/showMessage";
+import { nextTick } from "vue";
+import { reactive, ref, onMounted } from "vue";
+
 const isActive = ref(true);
+const userStore = useUserStore();
 
-const userForm = reactive({
-  name: "joshua",
-  sex: "男",
-  professional: "寄",
-  studentId: "114514"
+const role = userStore.roles;
+
+const userForm = ref<any>({
+  name: "",
+  sex: "",
+  professional: "",
+  studentId: "",
+  teacherId: ""
 });
 
-const pwdForm = reactive({
-  username: "",
-  old_pwd: "",
-  new_pwd: "",
-  confirm_new_pwd: ""
+const pwdForm = ref({
+  newPassword: "",
+  checkPassword: ""
 });
 
-const btn = reactive({
+const btn = ref({
   userInfoLoading: false,
   pwdLoading: false
 });
 
-const handleUpdateUserInfo = () => {};
-const handleUpdateUserPwd = () => {};
+const handleUpdateUserInfo = () => {
+  if (role === STUDENT) {
+    /** STUDENT */
+    userStore
+      .updateInfo({
+        name: userForm.value.name,
+        studentId: userForm.value.studentId,
+        professional: userForm.value.professional
+      })
+      .then(() => {
+        userStore.getInfo();
+      });
+  } else {
+    /** TEACHER */
+    userStore
+      .updateInfo({
+        name: userForm.value.name,
+        teacherId: userForm.value.teacherId,
+        professional: userForm.value.prefessional
+      })
+      .then(() => {
+        userStore.getInfo();
+      });
+  }
+};
+const handleUpdateUserPwd = () => {
+  userStore
+    .changePwd({
+      newPassword: pwdForm.value.newPassword,
+      checkPassword: pwdForm.value.checkPassword
+    })
+    .then(() => {
+      showMessage("密码修改成功", "success");
+    });
+};
+
+onMounted(async () => {
+  if (role === STUDENT) {
+    // userStore.getInfo()
+    if (!userStore.studentInfo.studentId) {
+      await userStore.getInfo();
+    }
+    userForm.value = userStore.studentInfo;
+    console.log(userForm, userStore.studentInfo);
+  } else {
+    if (!userStore.teacherInfo.teacherId) {
+      await userStore.getInfo();
+    }
+    userForm.value = userStore.teacherInfo;
+  }
+  await nextTick();
+});
 </script>
 
 <template>
@@ -45,13 +102,24 @@ const handleUpdateUserPwd = () => {};
               v-model="userForm.name"
             ></el-input>
           </el-form-item>
-          <el-form-item label="学号" prop="studentId">
+          <el-form-item v-if="role === STUDENT" label="学号" prop="studentId">
             <el-input
               size="small"
               type="text"
               style="width: 12rem"
               placeholder="学号"
+              disabled
               v-model="userForm.studentId"
+            ></el-input>
+          </el-form-item>
+          <el-form-item v-else label="教师工号" prop="colleges">
+            <el-input
+              size="small"
+              type="text"
+              style="width: 12rem"
+              placeholder="教师工号"
+              disabled
+              v-model="userForm.teacherId"
             ></el-input>
           </el-form-item>
           <el-form-item label="专业" prop="professional">
@@ -89,7 +157,7 @@ const handleUpdateUserPwd = () => {};
               style="width: 12rem"
               placeholder="新密码"
               show-password
-              v-model="pwdForm.new_pwd"
+              v-model="pwdForm.newPassword"
             ></el-input>
           </el-form-item>
           <el-form-item label="确认新密码" prop="confirm_new_pwd">
@@ -100,7 +168,7 @@ const handleUpdateUserPwd = () => {};
               style="width: 12rem"
               placeholder="确认新密码"
               show-password
-              v-model="pwdForm.confirm_new_pwd"
+              v-model="pwdForm.checkPassword"
             ></el-input>
           </el-form-item>
           <el-form-item>
