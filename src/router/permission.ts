@@ -21,7 +21,7 @@ router.beforeEach(async (to, _from, next) => {
   const permissionStore = usePermissionStoreHook();
   const token = getToken();
 
-  console.log(to, _from, document.cookie, userStore.roles);
+  // console.log(to, _from, document.cookie, userStore.roles);
   // 判断该用户是否已经登录
   if (userStore.roles === -1) {
     // 如果在免登录的白名单中，则直接进入

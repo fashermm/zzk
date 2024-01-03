@@ -146,28 +146,29 @@ export const useUserStore = defineStore("user", () => {
 
   /** 更新个人信息 */
   const updateInfo = async (form: any) => {
+    // console.log("updateInfo", form);
     if (roles.value === STUDENT) {
-      console.log('updateInfo', form);
+      console.log("updateInfo", form);
       studentUpdateAPI(form).then((res) => {
         console.log(res);
       });
     } else {
-      teacherUpdateAPI(form).then(res => {
+      teacherUpdateAPI(form).then((res) => {
         console.log(res);
-      })
+      });
     }
   };
 
   /** 修改密码 */
   const changePwd = async (pwdForm: any) => {
-    if(roles.value === STUDENT){
-      studentUpdateAPI(pwdForm).then(res=>{
+    if (roles.value === STUDENT) {
+      studentUpdateAPI(pwdForm).then((res) => {
         console.log(res);
-      })
-    }else{
-      teacherUpdateAPI(pwdForm).then(res=>{
+      });
+    } else {
+      teacherUpdateAPI(pwdForm).then((res) => {
         console.log(res);
-      })
+      });
     }
   };
 
