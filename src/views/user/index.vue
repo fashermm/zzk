@@ -46,7 +46,7 @@ const handleUpdateUserInfo = () => {
       .updateInfo({
         name: userForm.value.name,
         teacherId: userForm.value.teacherId,
-        professional: userForm.value.prefessional
+        professional: userForm.value.professional
       })
       .then(() => {
         userStore.getInfo();
