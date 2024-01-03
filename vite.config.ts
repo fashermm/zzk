@@ -10,6 +10,7 @@ import UnoCSS from "unocss/vite"
 
 /** 配置项文档：https://cn.vitejs.dev/config */
 export default (configEnv: ConfigEnv): UserConfigExport => {
+  console.log('configEnv', configEnv);
   const viteEnv = loadEnv(configEnv.mode, process.cwd()) as ImportMetaEnv
   const { VITE_PUBLIC_PATH } = viteEnv
   return {
@@ -33,14 +34,6 @@ export default (configEnv: ConfigEnv): UserConfigExport => {
       /** 端口被占用时，是否直接退出 */
       strictPort: false,
       /** 接口代理 */
-      // proxy: {
-      //   "/api/v1": {
-      //     target: "https://www.fastmock.site/mock/761e2dda2b8890ab86c928a74e8f6538",
-      //     ws: true,
-      //     /** 是否允许跨域 */
-      //     changeOrigin: true
-      //   }
-      // },
       proxy: {
         "/api": {
           target: "http://120.79.99.70:7777/api",

@@ -16,7 +16,7 @@ import { TEACHER } from "@/constants/state";
 export const useLessonStore = defineStore("lesson", () => {
   const userStore = useUserStore();
 
-  const lessonList = ref();
+  const lessonList = ref([]);
 
   const getLesson = async () => {
     console.log(userStore);
@@ -35,9 +35,13 @@ export const useLessonStore = defineStore("lesson", () => {
 
   //#region teacher
   const createLesson = async (data: any) => {
-    createLessonAPI({ ...data, teacherName: userStore.teacherInfo.name }).then((res) => {
-      console.log({ ...res });
-    });
+    try {
+      console.log('userStore.teacherInfo.name', userStore.teacherInfo.name)
+      const res = await createLessonAPI({ ...data, teacherName: userStore.teacherInfo.name })
+      Promise.reject(res.data);
+    } catch (err) {
+      Promise.reject(err);
+    }
   };
 
   const deleteLesson = async (data: any) => {

@@ -1,6 +1,7 @@
 import request from "@/config/request";
 
 export const createLessonAPI = ({ name, timeYear, timeXueqi, teacherName }: any) => {
+  console.log( name, timeYear, timeXueqi, teacherName );
   return request.post({
     url: "/teacher/startcourse",
     data: { name, timeYear, timeXueqi, teacherName }

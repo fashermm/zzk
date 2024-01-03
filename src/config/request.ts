@@ -17,7 +17,7 @@ function logout() {
 function createService() {
   // 创建一个 axios 实例命名为 service
   const service = axios.create({
-    baseURL: import.meta.env.VITE_BASE_API,
+    baseURL: import.meta.env.VITE_LOCAL_HOST || import.meta.env.VITE_BASE_API,
     responseType: "json",
     timeout: 300000
   });

@@ -7,7 +7,9 @@ import { storeToRefs } from "pinia";
 import { useUserStore } from "@/store/modules/user";
 import { showMessage } from "@/utils/showMessage";
 
-const tableData = lessonData;
+
+
+// const tableData = lessonData;
 
 const userStore = useUserStore();
 const lessonStore = useLessonStore();
@@ -23,13 +25,15 @@ const formLabelWidth = "140px";
 const lessonForm = reactive({
   name: "",
   timeYear: "",
-  timeXueqi: ""
+  timeXueqi: "",
+  // teacherName: "",
 });
 const editLessonForm = reactive({
   newCourseName: "",
   newCourseTimeYear: "",
-  newCourseTimeXueqi: ""
+  newCourseTimeXueqi: "",
 });
+
 
 const changeRole = () => {
   // role = role === STUDENT ? TEACHER : STUDENT;
@@ -43,7 +47,7 @@ const confirmDeleteLesson = (className: any) => {
   // alert("删除成功！！"); //还得写一个删除事件
   // console.log("confirm del", data);
   lessonStore.deleteLesson({ className }).then(() => {
-    showMessage("移出成功", "success");
+    showMessage("移除成功", "success");
   });
 };
 
@@ -61,7 +65,11 @@ const changeEditDialog = (flag: undefined | boolean = undefined) => {
 
 const addLesson = () => {
   console.log("addLesson", lessonForm);
-  lessonStore.createLesson(lessonForm);
+  lessonStore.createLesson(lessonForm).then(() => {
+    showMessage('开设成功', 'success');
+    showAddCourseDialog.value = false;
+    lessonForm.name = ""; lessonForm.timeXueqi = ""; lessonForm.timeYear = "";
+  })
 };
 
 const editLesson = () => {
@@ -92,8 +100,9 @@ const cancelExit = () => {
 
 onMounted(async () => {
   if (!lessonList.value || !lessonList.value.length) {
-    console.log("onMounted", role);
+    // console.log("onMounted", role);
     await lessonStore.getLesson();
+    console.log('onMounted', lessonList);
   }
 });
 </script>
@@ -106,22 +115,16 @@ onMounted(async () => {
     </div>
     <!-- <el-button @click="changeRole">Test</el-button> -->
     <div v-if="role === TEACHER" class="table1">
-      <el-table :data="tableData" style="width: 100%">
+      <el-table :data="lessonList" style="width: 100%">
         <el-table-column fixed prop="classId" label="班级编号" />
-        <el-table-column prop="className" label="班级名字" />
-        <el-table-column prop="studentName" label="学生名字" />
+        <el-table-column prop="name" label="课程名称" />
         <el-table-column prop="teacherName" label="老师名字" />
-        <el-table-column prop="courseName" label="课程名称" />
         <el-table-column prop="timeYear" label="开设学年" />
-        <el-table-column prop="timeXuegi" label="开设学期" />
+        <el-table-column prop="timeXueqi" label="开设学期" />
         <el-table-column prop="" label="操作">
           <template #default="scope">
             <el-button link size="small" @click="changeEditDialog(true)" class="button1">编辑</el-button>
-            <el-popconfirm
-              title="确认取消开设该课程？"
-              @confirm="confirmDeleteLesson(scope.row.className)"
-              @cancel="cancelDelete"
-            >
+            <el-popconfirm title="确认取消开设该课程？" @confirm="confirmDeleteLesson(scope.row.className)" @cancel="cancelDelete">
               <template #reference>
                 <el-button link type="danger" size="small" class="button2">删除 </el-button>
               </template>
@@ -131,14 +134,12 @@ onMounted(async () => {
       </el-table>
     </div>
     <div v-else class="table1">
-      <el-table :data="tableData" style="width: 100%">
+      <el-table :data="lessonList" style="width: 100%">
         <el-table-column fixed prop="classId" label="班级编号" />
-        <el-table-column prop="className" label="班级名字" />
-        <el-table-column prop="studentName" label="学生名字" />
+        <el-table-column prop="name" label="课程名称" />
         <el-table-column prop="teacherName" label="老师名字" />
-        <el-table-column prop="courseName" label="课程名称" />
         <el-table-column prop="timeYear" label="开设学年" />
-        <el-table-column prop="timeXuegi" label="开设学期" />
+        <el-table-column prop="timeXueqi" label="开设学期" />
         <el-table-column label="操作">
           <template #default="scope">
             <el-button link size="small" @click="changeEditDialog()" class="button1">编辑</el-button>
@@ -157,6 +158,9 @@ onMounted(async () => {
         <el-form-item label="课程名称" :label-width="formLabelWidth">
           <el-input v-model="lessonForm.name" style="width: 12rem" autocomplete="off" />
         </el-form-item>
+        <!-- <el-form-item label="教师" :label-width="formLabelWidth">
+          <el-input v-model="lessonForm.teacherName" style="width: 12rem" autocomplete="off" />
+        </el-form-item> -->
         <el-form-item label="开设学年" :label-width="formLabelWidth">
           <el-input v-model="lessonForm.timeYear" style="width: 12rem" autocomplete="off" />
         </el-form-item>
@@ -174,28 +178,15 @@ onMounted(async () => {
     <el-dialog v-model="showEditCourseDialog" title="编辑课程" style="width: 30rem">
       <el-form :model="editLessonForm">
         <el-form-item label="课程名称" :label-width="formLabelWidth">
-          <el-input
-            v-model="editLessonForm.newCourseName"
-            style="width: 12rem"
-            placeholder="请输入课程名"
-            autocomplete="off"
-          />
+          <el-input v-model="editLessonForm.newCourseName" style="width: 12rem" placeholder="请输入课程名" autocomplete="off" />
         </el-form-item>
         <el-form-item label="开设学年" :label-width="formLabelWidth">
-          <el-input
-            v-model="editLessonForm.newCourseTimeYear"
-            style="width: 12rem"
-            placeholder="请输入开设学年"
-            autocomplete="off"
-          />
+          <el-input v-model="editLessonForm.newCourseTimeYear" style="width: 12rem" placeholder="请输入开设学年"
+            autocomplete="off" />
         </el-form-item>
         <el-form-item label="开设学期" :label-width="formLabelWidth">
-          <el-input
-            v-model="editLessonForm.newCourseTimeXueqi"
-            style="width: 12rem"
-            placeholder="请输入开设学期"
-            autocomplete="off"
-          />
+          <el-input v-model="editLessonForm.newCourseTimeXueqi" style="width: 12rem" placeholder="请输入开设学期"
+            autocomplete="off" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -209,21 +200,11 @@ onMounted(async () => {
     <el-dialog v-model="showJoinCourseDialog" title="加入课程" style="width: 30rem">
       <el-form :model="editLessonForm">
         <el-form-item label="课程名称" :label-width="formLabelWidth">
-          <el-input
-            v-model="editLessonForm.newCourseName"
-            style="width: 12rem"
-            placeholder="请输入课程名"
-            autocomplete="off"
-          />
+          <el-input v-model="editLessonForm.newCourseName" style="width: 12rem" placeholder="请输入课程名" autocomplete="off" />
         </el-form-item>
         <el-form-item label="任教老师" :label-width="formLabelWidth">
-          <el-input
-            v-model="editLessonForm.newCourseTimeYear"
-            style="width: 12rem"
-            disabled
-            placeholder="任教老师"
-            autocomplete="off"
-          />
+          <el-input v-model="editLessonForm.newCourseTimeYear" style="width: 12rem" disabled placeholder="任教老师"
+            autocomplete="off" />
         </el-form-item>
         <el-form-item label="开设学年-学期" :label-width="formLabelWidth">
           <el-input v-model="editLessonForm.newCourseTimeXueqi" style="width: 12rem" disabled autocomplete="off" />
@@ -244,25 +225,31 @@ onMounted(async () => {
   margin-top: 20px;
   margin-left: 20px;
   margin-right: 20px;
+
   .addCourse {
     margin-bottom: 10px;
   }
+
   .button1 {
     color: var(--v3-tagsview-tag-text-color);
   }
+
   .button2 {
     background-color: #f56c6c;
     color: white;
+
     :hover {
       background-color: #b25252;
     }
   }
 }
+
 .el-button.is-link {
   padding: 10px;
   margin-right: 10px;
   font-weight: 700;
 }
+
 .el-button.is-link:first-child {
   border: 1px solid var(--v3-tagsview-tag-border-color);
 }
@@ -270,12 +257,14 @@ onMounted(async () => {
 .el-table .cell:last-child {
   text-align: center;
 }
+
 .el-button.is-link:not(.is-disabled):focus,
 .el-button.is-link:not(.is-disabled):hover {
   background-color: #b25252 !important;
   border: 1px solid #b25252;
   color: white;
 }
+
 .el-button.is-link:not(.is-disabled):first-child:focus,
 .el-button.is-link:first-child:hover {
   border: 1px solid #409eff !important;
