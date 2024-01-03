@@ -1,30 +1,59 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { TEACHER, STUDENT } from "@/constants/state";
-import { lessonData } from "../lesson/data";
+import { TEACHER, STUDENT, TRIGGERCHECK, CODECHECK } from "@/constants/state";
+// import { lessonData } from "../lesson/data";
+import { useUserStore } from "@/store/modules/user";
+import { useCheckInStore } from "@/store/modules/checkIn";
+import { showMessage } from "@/utils/showMessage";
+import { storeToRefs } from "pinia";
+import { computed } from "vue";
 
-const tableData = lessonData;
+const userStore = useUserStore();
+const checkInStore = useCheckInStore();
+
 const checkInTypeList = [
   {
     type: "点击签到",
-    key: 0
+    key: TRIGGERCHECK
   },
   {
     type: "签到码签到",
-    key: 1
+    key: CODECHECK
   }
 ];
 
-const role = ref(TEACHER);
+const role = userStore.roles;
+const { checkInRecords, studentListRecords } = storeToRefs(checkInStore);
+const checkNum = computed(() => {
+  return studentListRecords.value.filter((item: any) => {
+    item?.status && item?.status === "已签到";
+  }).length;
+});
+
+const checkCode = ref("");
+const showCheckInDialog = ref(false); // 签到弹窗
 const showPublishDialog = ref(false);
 const showCheckInDetailDialog = ref(false);
-const lesson = ref({});
+const lesson = ref("");
 const checkInTypeKey = ref();
 const startCheckInTime = ref("");
 const endCheckInTime = ref("");
 
-const changeRole = () => {
-  role.value = role.value === STUDENT ? TEACHER : STUDENT;
+const checkIn = () => {
+  try {
+    checkInStore.checkIn({ code: checkCode.value });
+    showCheckInDialog.value = false;
+    checkCode.value = "";
+    showMessage("签到成功", "success");
+  } catch {
+    showMessage("签到失败", "error");
+  }
+};
+
+const publishCheckIn = () => {
+  checkInStore.publishCheck({}).then((res) => {
+    console.log(res);
+  });
 };
 
 const openPublishCheckIn = () => {
@@ -33,8 +62,24 @@ const openPublishCheckIn = () => {
 
 const openCheckInDetail = () => {
   showCheckInDetailDialog.value = true;
+  // 获取该次签到详细情况
+  checkInStore.getCheckInfoByTeacher({});
 };
-const deleteCheckIn = () => {};
+
+const deleteCheckIn = (idx: any) => {
+  console.log(idx);
+  checkInStore.deleteCheck(idx);
+};
+
+const openCheckIn = (type: number) => {
+  if (type === TRIGGERCHECK) {
+    checkCode.value = "";
+    checkIn();
+  } else {
+    showCheckInDialog.value = true;
+  }
+};
+
 const cancelDelete = () => {};
 </script>
 
@@ -42,20 +87,19 @@ const cancelDelete = () => {};
   <div>
     <div>
       <div>
-        <el-button @click="changeRole">TEST</el-button>
         <el-button v-if="role === TEACHER" @click="openPublishCheckIn">发布签到</el-button>
       </div>
       <div v-if="role === TEACHER" class="table1">
-        <el-table :data="tableData" style="width: 100%">
+        <el-table :data="checkInRecords" style="width: 100%">
           <el-table-column prop="className" label="签到标题" />
           <el-table-column prop="teacherName" label="老师名字" />
           <el-table-column prop="courseName" label="课程名称" />
-          <el-table-column prop="" label="开设时间" />
+          <el-table-column prop="" label="开始时间" />
           <el-table-column prop="" label="结束时间" />
           <el-table-column label="操作">
-            <template #default>
+            <template #default="scope">
               <el-button link size="small" @click="openCheckInDetail()" class="button1">详情</el-button>
-              <el-popconfirm title="是否删除该签到记录？" @confirm="deleteCheckIn" @cancel="cancelDelete">
+              <el-popconfirm title="是否删除该签到记录？" @confirm="deleteCheckIn(scope.$index)" @cancel="cancelDelete">
                 <template #reference>
                   <el-button link type="danger" size="small" class="button2">删除 </el-button>
                 </template>
@@ -65,15 +109,23 @@ const cancelDelete = () => {};
         </el-table>
       </div>
       <div v-else class="table1">
-        <el-table :data="tableData" style="width: 100%">
+        <el-table :data="checkInRecords" style="width: 100%">
           <el-table-column prop="className" label="签到标题" />
           <el-table-column prop="teacherName" label="老师名字" />
           <el-table-column prop="courseName" label="课程名称" />
           <el-table-column prop="" label="开设时间" />
           <el-table-column prop="" label="结束时间" />
-          <el-table-column prop="" label="签到状态" />
+          <el-table-column prop="status" label="签到状态" />
           <el-table-column prop="" label="操作">
-            <el-button size="small" type="primary">签到 </el-button>
+            <template #default="scope">
+              <el-button
+                size="small"
+                type="primary"
+                @click="openCheckIn(scope.row.type)"
+                :disabled="scope.row.status === '已签到'"
+                >签到
+              </el-button>
+            </template>
           </el-table-column>
         </el-table>
       </div>
@@ -82,10 +134,7 @@ const cancelDelete = () => {};
       <el-form label-width="auto">
         <div class="flex flex-col items-center">
           <el-form-item label="课程名" prop="name">
-            <el-select v-model="lesson" placeholder="请选择课程" style="width: 12rem">
-              <!-- <el-option label="Options1" value="1" />
-            <el-option label="Options2" value="2" /> -->
-            </el-select>
+            <el-input v-model="lesson" placeholder="课程名" style="width: 12rem"> </el-input>
           </el-form-item>
           <el-form-item label="签到方式">
             <el-select v-model="checkInTypeKey" placeholder="请选择签到方式" style="width: 12rem">
@@ -110,26 +159,40 @@ const cancelDelete = () => {};
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showPublishDialog = false">取消</el-button>
-          <el-button type="primary" @click="showPublishDialog = false">发布</el-button>
+          <el-button type="primary" @click="publishCheckIn">发布</el-button>
         </span>
       </template>
     </el-dialog>
     <el-dialog v-model="showCheckInDetailDialog" title="签到详情">
       <div>
         <div>
-          <el-tag :style="{ marginRight: '6px' }" type="success">{{ "已签到: 0人" }}</el-tag>
-          <el-tag :style="{ marginRight: '6px' }" type="danger">{{ "未签到: 0人" }}</el-tag>
+          <el-tag :style="{ marginRight: '6px' }" type="success">{{ `已签到: ${checkNum}人` }}</el-tag>
+          <el-tag :style="{ marginRight: '6px' }" type="danger">{{
+            `未签到: ${studentListRecords.length - checkNum}人`
+          }}</el-tag>
         </div>
-        <el-table>
-          <el-table-column prop="" label="学生姓名" width="180" />
-          <el-table-column prop="" label="签到时间" width="180" />
-          <el-table-column prop="" label="签到状态" />
+        <el-table :data="studentListRecords">
+          <el-table-column prop="studentName" label="学生姓名" width="180" />
+          <el-table-column prop="timeYear" label="签到时间" width="180" />
+          <el-table-column prop="timeXuegi" label="签到状态" />
         </el-table>
       </div>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showCheckInDetailDialog = false"> 取消 </el-button>
           <el-button type="primary" @click="showCheckInDetailDialog = false"> 确认 </el-button>
+        </span>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="showCheckInDialog" title="签到" style="width: 20rem">
+      <div class="flex flex-row">
+        <span>签到码：</span>
+        <el-input v-model="checkCode" style="width: 12rem" placeholder="输入签到码"></el-input>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showCheckInDialog = false"> 取消 </el-button>
+          <el-button type="primary" @click="checkIn"> 签到 </el-button>
         </span>
       </template>
     </el-dialog>
