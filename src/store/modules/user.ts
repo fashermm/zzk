@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import store from "@/store";
 import { defineStore } from "pinia";
 import { usePermissionStore } from "./permission";
@@ -10,38 +10,81 @@ import { loginApi, getUserInfoApi } from "@/api/login";
 import { RegisterRequestData, type LoginRequestData } from "@/api/login/types/login";
 import { type RouteRecordRaw } from "vue-router";
 import routeSettings from "@/config/route";
-import { studentLoginAPI, studentRegisterAPI } from "@/api/student";
+import { studentInfoAPI, studentLoginAPI, studentLogoutAPI, studentRegisterAPI, studentUpdateAPI } from "@/api/student";
 import { STUDENT } from "@/constants/state";
-import { teacherRegisterAPI } from "@/api/teacher";
+import { teacherInfoAPI, teacherLoginAPI, teacherRegisterAPI, teacherUpdateAPI } from "@/api/teacher";
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "");
-  const roles = ref<string[]>([]);
+  const roles = ref(-1);
   const username = ref<string>("");
+
+  const studentInfo = ref({
+    name: "",
+    professional: "",
+    role: "",
+    sex: "",
+    studentId: ""
+  });
+  const teacherInfo = ref({
+    name: "",
+    professional: "",
+    role: "",
+    colleges: "",
+    teacherId: ""
+  });
 
   const permissionStore = usePermissionStore();
   const tagsViewStore = useTagsViewStore();
   const settingsStore = useSettingsStore();
 
   /** 设置角色数组 */
-  const setRoles = (value: string[]) => {
+  const setRoles = (value: string[] | any) => {
     roles.value = value;
   };
   /** 登录 */
   const login = async ({ username, password }: LoginRequestData, role: number) => {
-    // const { data } = await studentLoginAPI({ studentId: username, studenetPassword: password });
-    const { data } = await loginApi({ username, password })
-    setToken(data.token)
-    token.value = data.token
-    console.log(token.value);
-    // Promise.resolve(data);
+    if (role === STUDENT) {
+      await studentLoginAPI({ studentId: username, studentPassword: password }).then((res) => {
+        const cookieString = document.cookie;
+        const cookies = cookieString.split("; ");
+        const cookieMap: any = {};
+        cookies.forEach((cookie) => {
+          const [name, value] = cookie.split("=");
+          cookieMap[name] = value;
+        });
+        console.log(cookieString, cookies, cookieMap);
+        studentInfo.value = { ...res.data };
+        setRoles(studentInfo.value.role);
+        setToken("1");
+      });
+      return Promise.resolve("success");
+    } else {
+      await teacherLoginAPI({ teacherId: username, teacherPassword: password }).then((res) => {
+        const cookieString = document.cookie;
+        const cookies = cookieString.split("; ");
+        const cookieMap: any = {};
+        cookies.forEach((cookie) => {
+          const [name, value] = cookie.split("=");
+          cookieMap[name] = value;
+        });
+        console.log(cookieString, cookies, cookieMap);
+        teacherInfo.value = { ...res.data };
+        setRoles(teacherInfo.value.role);
+        setToken("1");
+      });
+      return Promise.resolve("success");
+    }
   };
   /** 获取用户详情 */
   const getInfo = async () => {
-    const { data } = await getUserInfoApi();
-    username.value = data.username;
-    // 验证返回的 roles 是否为一个非空数组，否则塞入一个没有任何作用的默认角色，防止路由守卫逻辑进入无限循环
-    roles.value = data.roles?.length > 0 ? data.roles : routeSettings.defaultRoles;
+    if (roles.value === STUDENT) {
+      const { data } = await studentInfoAPI();
+      studentInfo.value = { ...data };
+    } else {
+      const { data } = await teacherInfoAPI();
+      teacherInfo.value = { ...data };
+    }
   };
   /** 切换角色 */
   const changeRoles = async (role: string) => {
@@ -49,7 +92,7 @@ export const useUserStore = defineStore("user", () => {
     token.value = newToken;
     setToken(newToken);
     await getInfo();
-    permissionStore.setRoutes(roles.value);
+    permissionStore.setRoutes();
     resetRouter();
     permissionStore.dynamicRoutes.forEach((item: RouteRecordRaw) => {
       router.addRoute(item);
@@ -66,12 +109,13 @@ export const useUserStore = defineStore("user", () => {
         studentId: res.id,
         studentPassword: res.password
       });
+
       console.log(data);
     } else {
       const data = await teacherRegisterAPI({
         ...res,
-        studentId: res.id,
-        studentPassword: res.password
+        teacherId: res.id,
+        teacherPassword: res.password
       });
       console.log(data);
     }
@@ -81,15 +125,16 @@ export const useUserStore = defineStore("user", () => {
   const logout = () => {
     removeToken();
     token.value = "";
-    roles.value = [];
+    roles.value = -1;
     resetRouter();
     _resetTagsView();
+    studentLogoutAPI();
   };
   /** 重置 Token */
   const resetToken = () => {
     removeToken();
     token.value = "";
-    roles.value = [];
+    roles.value = 0;
   };
   /** 重置 Visited Views 和 Cached Views */
   const _resetTagsView = () => {
@@ -99,17 +144,48 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
+  /** 更新个人信息 */
+  const updateInfo = async (form: any) => {
+    if (roles.value === STUDENT) {
+      console.log('updateInfo', form);
+      studentUpdateAPI(form).then((res) => {
+        console.log(res);
+      });
+    } else {
+      teacherUpdateAPI(form).then(res => {
+        console.log(res);
+      })
+    }
+  };
+
+  /** 修改密码 */
+  const changePwd = async (pwdForm: any) => {
+    if(roles.value === STUDENT){
+      studentUpdateAPI(pwdForm).then(res=>{
+        console.log(res);
+      })
+    }else{
+      teacherUpdateAPI(pwdForm).then(res=>{
+        console.log(res);
+      })
+    }
+  };
+
   return {
     token,
     roles,
     username,
+    studentInfo,
+    teacherInfo,
     setRoles,
     login,
     getInfo,
     changeRoles,
     logout,
     resetToken,
-    register
+    register,
+    updateInfo,
+    changePwd
   };
 });
 

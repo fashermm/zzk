@@ -1,7 +1,10 @@
 import request from "@/config/request";
 
-export function studentLoginAPI({ studentId, studenetPassword }: any) {
-  return request.post({ url: "/student/login", data: { studentId, studenetPassword } });
+export function studentLoginAPI({ studentId, studentPassword }: any) {
+  return request.post({
+    url: "/student/login",
+    data: { studentId, studentPassword },
+  });
 }
 
 export function studentRegisterAPI({ checkPassword, name, professional, sex, studentId, studentPassword }: any) {

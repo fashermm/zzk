@@ -26,15 +26,15 @@ const loading = ref(false);
 const codeUrl = ref("");
 /** 登录表单数据 */
 const loginFormData: LoginRequestData = reactive({
-  username: "admin",
-  password: "12345678",
+  username: "",
+  password: "",
 });
 /** 登录表单校验规则 */
 const loginFormRules: FormRules = {
   username: [{ message: "请输入账号", trigger: "blur" }],
   password: [
     { message: "请输入密码", trigger: "blur" },
-    { min: 8, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
+    { min: 6, max: 16, message: "长度在 6 到 16 个字符", trigger: "blur" }
   ],
 };
 /** 登录逻辑 */

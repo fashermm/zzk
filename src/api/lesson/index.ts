@@ -1,45 +1,50 @@
 import request from "@/config/request";
 
-export const createLesson = ({ name, timeYear, timeXueqi }: any) => {
+export const createLessonAPI = ({ name, timeYear, timeXueqi, teacherName }: any) => {
   return request.post({
-    url: "/teacher/stactCourse",
-    data: { name, timeYear, timeXueqi }
+    url: "/teacher/startcourse",
+    data: { name, timeYear, timeXueqi, teacherName }
   });
 };
 
-export const updateLesson = ({ newCourseName, newCourseTimeYear, newCourseTimeXueqi }: any) => {
+export const updateLessonAPI = ({ newCourseName, newCourseTimeYear, newCourseTimeXueqi, teacherName }: any) => {
   return request.post({
-    url: "/teacher/updateCourse",
-    data: { newCourseName, newCourseTimeYear, newCourseTimeXueqi }
+    url: "/teacher/updatecourse",
+    data: { newCourseName, newCourseTimeYear, newCourseTimeXueqi, teacherName }
   });
 };
 
-export const deleteLesson = ({ courseName }: any) => {
+export const deleteLessonAPI = ({ className, teacherName }: any) => {
   return request.post({
-    url: "/teacher/deleteCourse",
-    data: { courseName }
-  });
-};
-export const getLessonByTeacher = () => {
-  return request.get({
-    url: "/teacher/getCourse"
-  });
-};
-export const joinLesson = ({ className, teacherName }: any) => {
-  return request.post({
-    url: "/teacher/updateCourse",
+    url: "/teacher/deletecourse",
     data: { className, teacherName }
   });
 };
-export const getLessonByStudent = () => {
-  return request.post({
-    url: "/student/classInfo"
+
+export const getLessonByTeacherAPI = (params: Record<string, any>) => {
+  return request.get({
+    url: "/teacher/getcourse",
+    params
   });
 };
 
-export const quitLesson = ({ className }: any) => {
+export const joinLessonAPI = ({ className, teacherName }: any) => {
   return request.post({
-    url: "/student/quitClass",
+    url: "/teacher/updatecourse",
+    data: { className, teacherName }
+  });
+};
+
+export const getLessonByStudentAPI = (params: Record<string, any>) => {
+  return request.get({
+    url: "/student/getclassInfo",
+    params
+  });
+};
+
+export const quitLessonAPI = ({ className }: any) => {
+  return request.post({
+    url: "/student/quitclass",
     data: { className }
   });
 };

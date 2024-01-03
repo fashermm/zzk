@@ -9,6 +9,7 @@ import { Picture, Loading } from "@element-plus/icons-vue";
 import { getLoginCodeApi } from "@/api/login";
 import { type RegisterRequestData } from "@/api/login/types/login";
 import { STUDENT } from "@/constants/state";
+import { showMessage } from "@/utils/showMessage";
 
 const props = defineProps({
   role: Number
@@ -32,7 +33,7 @@ const registerFormDataDefault: RegisterRequestData = {
   colleges: "",
   professional: "",
   password: "",
-  checkPassword: "",
+  checkPassword: ""
 };
 const registerFormData = reactive({ ...registerFormDataDefault });
 /** 注册表单校验规则 */
@@ -44,9 +45,9 @@ const registerFormRules: FormRules = {
   professional: [{ required: true, message: "请输入专业", trigger: "blur" }],
   password: [
     { required: true, message: "请输入密码", trigger: "blur" },
-    { min: 8, max: 16, message: "长度在 8 到 16 个字符", trigger: "blur" }
+    { min: 6, max: 16, message: "长度在 6 到 16 个字符", trigger: "blur" }
   ],
-  checkPassword: [{ required: true, message: "再次确认密码", trigger: "blur" }],
+  checkPassword: [{ required: true, message: "再次确认密码", trigger: "blur" }]
 };
 /** 注册逻辑 */
 const handleRegister = () => {
@@ -57,10 +58,12 @@ const handleRegister = () => {
         .register(registerFormData, props.role!)
         .then(() => {
           /* 注册完成 */
+          showMessage("注册成功", "success");
           emits("jumpToLogin");
         })
         .catch(() => {
           // createCode();
+          // showMessage("注册失败", "error");
           registerFormData.password = "";
         })
         .finally(() => {
