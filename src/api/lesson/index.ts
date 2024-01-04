@@ -31,14 +31,14 @@ export const getLessonByTeacherAPI = (params: Record<string, any>) => {
 
 export const joinLessonAPI = ({ className, teacherName }: any) => {
   return request.post({
-    url: "/teacher/updatecourse",
+    url: "/student/addclass",
     data: { className, teacherName }
   });
 };
 
 export const getLessonByStudentAPI = (params: Record<string, any>) => {
   return request.get({
-    url: "/student/getclassInfo",
+    url: "/student/classinfo",
     params
   });
 };

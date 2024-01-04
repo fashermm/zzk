@@ -22,6 +22,10 @@ const showEditCourseDialog = ref(false);
 const showJoinCourseDialog = ref(false);
 const formLabelWidth = "140px";
 
+const joinLessonForm = reactive({
+  teacherName: "",
+  className: "",
+})
 const lessonForm = reactive({
   name: "",
   timeYear: "",
@@ -105,15 +109,19 @@ const openJoinDialog = () => {
   showJoinCourseDialog.value = true;
 };
 
-const joinLesson = (className: any, teacherName: string = "xxx") => {
+const joinLesson = () => {
   showJoinCourseDialog.value = false;
-  lessonStore.joinLesson({ className, teacherName }).then(() => {
+  lessonStore.joinLesson({ ...joinLessonForm }).then(() => {
     showMessage("加入班级成功", "success");
+    getLesson();
   });
 };
 
 const confirmQuit = (className: any) => {
-  lessonStore.quitLesson({ className });
+  lessonStore.quitLesson({ className }).then(() => {
+    showMessage("退出班级成功", "success");
+    getLesson();
+  });
 };
 
 const cancelExit = () => {
@@ -123,6 +131,7 @@ const cancelExit = () => {
 onMounted(async () => {
   if (!lessonList.value || !lessonList.value.length) {
     // console.log("onMounted", role);
+    lessonStore.clearLessonList();
     await lessonStore.getLesson();
     console.log('onMounted', lessonList);
   }
@@ -224,14 +233,10 @@ onMounted(async () => {
     <el-dialog v-model="showJoinCourseDialog" title="加入课程" style="width: 30rem">
       <el-form :model="editLessonForm">
         <el-form-item label="课程名称" :label-width="formLabelWidth">
-          <el-input v-model="editLessonForm.newCourseName" style="width: 12rem" placeholder="请输入课程名" autocomplete="off" />
+          <el-input v-model="joinLessonForm.className" style="width: 12rem" placeholder="请输入课程名" autocomplete="off" />
         </el-form-item>
         <el-form-item label="任教老师" :label-width="formLabelWidth">
-          <el-input v-model="editLessonForm.newCourseTimeYear" style="width: 12rem" disabled placeholder="任教老师"
-            autocomplete="off" />
-        </el-form-item>
-        <el-form-item label="开设学年-学期" :label-width="formLabelWidth">
-          <el-input v-model="editLessonForm.newCourseTimeXueqi" style="width: 12rem" disabled autocomplete="off" />
+          <el-input v-model="joinLessonForm.teacherName" style="width: 12rem" placeholder="任教老师" autocomplete="off" />
         </el-form-item>
       </el-form>
       <template #footer>

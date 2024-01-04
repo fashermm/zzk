@@ -65,9 +65,13 @@ export const useLessonStore = defineStore("lesson", () => {
 
   //#region student
   const joinLesson = async (data: any) => {
-    joinLessonAPI(data).then((res) => {
-      console.log(res);
-    });
+    try {
+      const res = await joinLessonAPI(data);
+      Promise.resolve(res.data);
+    } catch (err) {
+      console.log(err);
+      Promise.reject(err);
+    }
   };
   const quitLesson = async (data: any) => {
     quitLessonAPI(data).then((res) => {
