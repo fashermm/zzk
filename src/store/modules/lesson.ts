@@ -32,6 +32,9 @@ export const useLessonStore = defineStore("lesson", () => {
       });
     }
   };
+  const clearLessonList = () => {
+    lessonList.value = [];
+  }
 
   //#region teacher
   const createLesson = async (data: any) => {
@@ -51,17 +54,24 @@ export const useLessonStore = defineStore("lesson", () => {
   };
 
   const editLesson = async (data: any) => {
-    updateLessonAPI({ ...data, teacherName: userStore.teacherInfo.name }).then((res) => {
-      console.log(res);
-    });
+    try {
+      const res = await updateLessonAPI({ ...data, teacherName: userStore.teacherInfo.name });
+      Promise.resolve(res.data);
+    } catch (err) {
+      Promise.reject(err);
+    }
   };
   //#endregion
 
   //#region student
   const joinLesson = async (data: any) => {
-    joinLessonAPI(data).then((res) => {
-      console.log(res);
-    });
+    try {
+      const res = await joinLessonAPI(data);
+      Promise.resolve(res.data);
+    } catch (err) {
+      console.log(err);
+      Promise.reject(err);
+    }
   };
   const quitLesson = async (data: any) => {
     quitLessonAPI(data).then((res) => {
@@ -78,7 +88,8 @@ export const useLessonStore = defineStore("lesson", () => {
     deleteLesson,
     editLesson,
     joinLesson,
-    quitLesson
+    quitLesson,
+    clearLessonList
   };
 });
 
