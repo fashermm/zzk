@@ -29,6 +29,7 @@ const lessonForm = reactive({
   // teacherName: "",
 });
 const editLessonForm = reactive({
+  className:"",
   newCourseName: "",
   newCourseTimeYear: "",
   newCourseTimeXueqi: "",
@@ -46,7 +47,7 @@ const changeRole = () => {
 const confirmDeleteLesson = (className: any) => {
   // alert("删除成功！！"); //还得写一个删除事件
   // console.log("confirm del", data);
-  lessonStore.deleteLesson({ className }).then(() => {
+  lessonStore.deleteLesson({className}).then(() => {
     showMessage("移除成功", "success");
   });
 };
@@ -55,7 +56,9 @@ const cancelDelete = () => {
   console.log("取消删除");
 };
 
-const changeEditDialog = (flag: undefined | boolean = undefined) => {
+const changeEditDialog = (flag: undefined | boolean = undefined , className:any) => {
+  console.log(className)
+  editLessonForm.className =  className
   if (flag !== undefined) {
     showEditCourseDialog.value = flag;
   } else {
@@ -71,9 +74,17 @@ const addLesson = () => {
     lessonForm.name = ""; lessonForm.timeXueqi = ""; lessonForm.timeYear = "";
   })
 };
+// 测试用
+const editLessonForm1 = ref({
+  className:"abc",
+  newCourseName: "软工1",
+  newCourseTimeYear: "2025",
+  newCourseTimeXueqi: "下"
+});
 
 const editLesson = () => {
-  lessonStore.editLesson(editLessonForm);
+  lessonStore.editLesson(editLessonForm1.value);
+  console.log(editLessonForm1.value)
 };
 
 /**
@@ -123,8 +134,8 @@ onMounted(async () => {
         <el-table-column prop="timeXueqi" label="开设学期" />
         <el-table-column prop="" label="操作">
           <template #default="scope">
-            <el-button link size="small" @click="changeEditDialog(true)" class="button1">编辑</el-button>
-            <el-popconfirm title="确认取消开设该课程？" @confirm="confirmDeleteLesson(scope.row.className)" @cancel="cancelDelete">
+            <el-button link size="small" @click="changeEditDialog(true,scope.row.name)" class="button1">编辑</el-button>
+            <el-popconfirm title="确认取消该课程？" @confirm="confirmDeleteLesson(scope.row.name)" @cancel="cancelDelete">
               <template #reference>
                 <el-button link type="danger" size="small" class="button2">删除 </el-button>
               </template>
@@ -177,7 +188,10 @@ onMounted(async () => {
     </el-dialog>
     <el-dialog v-model="showEditCourseDialog" title="编辑课程" style="width: 30rem">
       <el-form :model="editLessonForm">
-        <el-form-item label="课程名称" :label-width="formLabelWidth">
+        <el-form-item label="旧的课程名称" :label-width="formLabelWidth">
+          <el-input v-model="editLessonForm.className" style="width: 12rem" disabled autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="新的课程名称" :label-width="formLabelWidth">
           <el-input v-model="editLessonForm.newCourseName" style="width: 12rem" placeholder="请输入课程名" autocomplete="off" />
         </el-form-item>
         <el-form-item label="开设学年" :label-width="formLabelWidth">
