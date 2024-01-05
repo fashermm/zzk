@@ -167,7 +167,7 @@ onMounted(async () => {
     <div v-else class="table1">
       <el-table :data="lessonList" style="width: 100%">
         <el-table-column fixed prop="classId" label="班级编号" />
-        <el-table-column prop="name" label="课程名称" />
+        <el-table-column prop="className" label="课程名称" />
         <el-table-column prop="teacherName" label="老师名字" />
         <el-table-column prop="timeYear" label="开设学年" />
         <el-table-column prop="timeXueqi" label="开设学期" />
