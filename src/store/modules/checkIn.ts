@@ -1,24 +1,36 @@
-import { checkInAPI, getCheckInfoAPI, getStudentCheckRecordsAPI, publishCheckInAPI } from "@/api/checkIn";
+import { checkInAPI, getCheckInfoAPI, getCheckRecordAPI, getStudentCheckRecordsAPI, publishCheckInAPI } from "@/api/checkIn";
 import { defineStore } from "pinia";
+import { useUserStore } from "./user";
 import { lessonData } from "@/constants/checkRecords";
 import { ref } from "vue";
 
 export const useCheckInStore = defineStore("checkIn", () => {
-  const checkInRecords = ref(lessonData);
+  const checkInRecords = ref([]);
   const studentListRecords = ref<any>([]); /* teacher */
   const studentCheckInfo = ref<any>([]);
+  const userStore = useUserStore();
+
+  const clearStudentCheckInfo = () => {
+    studentCheckInfo.value = [];
+  }
 
   const clearStudentListRecords = () => {
     studentListRecords.value = [];
   };
 
-  const publishCheck = async (data: any) => {
+  const clearCheckInRecords = () => {
+    checkInRecords.value = [];
+  }
+
+  //#region student
+
+  const publishCheck = async ({ className, code }: any) => {
     try {
-      const res = await publishCheckInAPI(data);
-      Promise.resolve(res.data);
+      const res = await publishCheckInAPI({ className, code, teacherName: userStore.teacherInfo.name });
+      return Promise.resolve(res.data);
     } catch (err) {
       console.log(err);
-      Promise.reject(err);
+      return Promise.reject(err);
     }
   };
 
@@ -28,9 +40,21 @@ export const useCheckInStore = defineStore("checkIn", () => {
     });
   };
 
+  const getCheckInfoRecords = async ({ className }: any) => {
+    try {
+      // debugger;
+      const res = await getCheckRecordAPI({ className, teacherName: userStore.teacherInfo.name });
+      console.log(res, 'getCheckInfoRecords');
+      checkInRecords.value = res.data;
+      Promise.resolve(res.data);
+    } catch (err) {
+      Promise.reject(err);
+    }
+  }
+
   /* 老师查看某个课程班级签到情况 */
-  const getCheckInfoByTeacher = (data: any) => {
-    getStudentCheckRecordsAPI(data)
+  const getCheckInfoByTeacher = () => {
+    getStudentCheckRecordsAPI({ teacherName: userStore.teacherInfo.name })
       .then((res) => {
         console.log(res);
       })
@@ -39,6 +63,8 @@ export const useCheckInStore = defineStore("checkIn", () => {
         console.log("studentListRecords", studentListRecords);
       });
   };
+
+  //#endregion
 
   //#region student
   const checkIn = (data: any) => {
@@ -52,10 +78,15 @@ export const useCheckInStore = defineStore("checkIn", () => {
       });
   };
   /* 学生查看自己签到情况 */
-  const getCheckInfoByStudent = (data: any) => {
-    getCheckInfoAPI(data).then((res) => {
-      console.log(res);
-    });
+  const getCheckInfoByStudent = async () => {
+    try {
+      getCheckInfoAPI({ studentName: userStore.studentInfo.name }).then((res) => {
+        console.log(res);
+        return Promise.resolve(res.data);
+      });
+    } catch (err) {
+      return Promise.reject(err);
+    }
   };
   //#endregion
 
@@ -66,6 +97,9 @@ export const useCheckInStore = defineStore("checkIn", () => {
     getCheckInfoByTeacher,
     getCheckInfoByStudent,
     clearStudentListRecords,
+    getCheckInfoRecords,
+    clearStudentCheckInfo,
+    clearCheckInRecords,
 
     checkInRecords,
     studentListRecords,

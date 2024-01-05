@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { TEACHER, STUDENT, TRIGGERCHECK, CODECHECK } from "@/constants/state";
 // import { lessonData } from "../lesson/data";
 import { useUserStore } from "@/store/modules/user";
 import { useCheckInStore } from "@/store/modules/checkIn";
 import { showMessage } from "@/utils/showMessage";
 import { storeToRefs } from "pinia";
-import { computed } from "vue";
+import { useLessonStore } from "@/store/modules/lesson";
 
 const userStore = useUserStore();
+const lessonStore = useLessonStore();
 const checkInStore = useCheckInStore();
 
 const checkInTypeList = [
@@ -23,7 +24,8 @@ const checkInTypeList = [
 ];
 
 const role = userStore.roles;
-const { checkInRecords, studentListRecords } = storeToRefs(checkInStore);
+const { checkInRecords, studentListRecords, studentCheckInfo } = storeToRefs(checkInStore);
+const { lessonList } = storeToRefs(lessonStore)
 const checkNum = computed(() => {
   return studentListRecords.value.filter((item: any) => {
     item?.status && item?.status === "已签到";
@@ -38,6 +40,7 @@ const lesson = ref("");
 const checkInTypeKey = ref();
 const startCheckInTime = ref("");
 const endCheckInTime = ref("");
+const className = ref("");
 
 const checkIn = () => {
   try {
@@ -51,8 +54,15 @@ const checkIn = () => {
 };
 
 const publishCheckIn = () => {
-  checkInStore.publishCheck({}).then((res) => {
-    console.log(res);
+  if (checkInTypeKey.value !== CODECHECK) {
+    checkCode.value = '';
+  }
+  checkInStore.publishCheck({ className: className.value, code: checkCode.value }).then((res) => {
+    console.log(res, 'checkInStore');
+    showPublishDialog.value = false;
+    checkInStore.getCheckInfoRecords({ className: className.value }).then(() => {
+      showMessage('发布成功', 'success')
+    })
   });
 };
 
@@ -63,7 +73,7 @@ const openPublishCheckIn = () => {
 const openCheckInDetail = () => {
   showCheckInDetailDialog.value = true;
   // 获取该次签到详细情况
-  checkInStore.getCheckInfoByTeacher({});
+  checkInStore.getCheckInfoByTeacher();
 };
 
 const deleteCheckIn = (idx: any) => {
@@ -80,7 +90,29 @@ const openCheckIn = (type: number) => {
   }
 };
 
-const cancelDelete = () => {};
+const handleClassSelect = () => {
+  // debugger;
+  checkInStore.getCheckInfoRecords({ className: className.value }).then(() => {
+    showMessage('查询成功', 'success')
+  })
+}
+
+const cancelDelete = () => { };
+
+onMounted(async () => {
+  if (role === TEACHER) {
+    if (!lessonList.value || !lessonList.value.length) {
+      lessonStore.clearLessonList();
+      await lessonStore.getLesson();
+      console.log('onMounted', lessonList);
+    }
+  } else {
+    if (!studentCheckInfo.value || !studentCheckInfo.value.length) {
+      checkInStore.clearStudentCheckInfo();
+      await checkInStore.getCheckInfoByStudent();
+    }
+  }
+})
 </script>
 
 <template>
@@ -88,14 +120,16 @@ const cancelDelete = () => {};
     <div>
       <div>
         <el-button v-if="role === TEACHER" @click="openPublishCheckIn">发布签到</el-button>
+        <el-select v-if="role === TEACHER" v-model="className" placeholder="请选择" @change="handleClassSelect">
+          <el-option v-for="(lesson, index) in (lessonList as any)" :label="lesson.name" :value="lesson.name"
+            :key="lesson.name">
+          </el-option>
+        </el-select>
       </div>
       <div v-if="role === TEACHER" class="table1">
         <el-table :data="checkInRecords" style="width: 100%">
-          <el-table-column prop="className" label="签到标题" />
-          <el-table-column prop="teacherName" label="老师名字" />
-          <el-table-column prop="courseName" label="课程名称" />
-          <el-table-column prop="" label="开始时间" />
-          <el-table-column prop="" label="结束时间" />
+          <el-table-column prop="className" label="课程名称" />
+          <el-table-column prop="signTime" label="签到时间" />
           <el-table-column label="操作">
             <template #default="scope">
               <el-button link size="small" @click="openCheckInDetail()" class="button1">详情</el-button>
@@ -118,12 +152,8 @@ const cancelDelete = () => {};
           <el-table-column prop="status" label="签到状态" />
           <el-table-column prop="" label="操作">
             <template #default="scope">
-              <el-button
-                size="small"
-                type="primary"
-                @click="openCheckIn(scope.row.type)"
-                :disabled="scope.row.status === '已签到'"
-                >签到
+              <el-button size="small" type="primary" @click="openCheckIn(scope.row.type)"
+                :disabled="scope.row.status === '已签到'">签到
               </el-button>
             </template>
           </el-table-column>
@@ -138,21 +168,12 @@ const cancelDelete = () => {};
           </el-form-item>
           <el-form-item label="签到方式">
             <el-select v-model="checkInTypeKey" placeholder="请选择签到方式" style="width: 12rem">
-              <el-option
-                v-for="checkInType in checkInTypeList"
-                :label="checkInType.type"
-                :value="checkInType.key"
-                :key="checkInType.key"
-              />
+              <el-option v-for="checkInType in checkInTypeList" :label="checkInType.type" :value="checkInType.key"
+                :key="checkInType.key" />
             </el-select>
           </el-form-item>
-          <el-form-item label="开始时间" prop="zone">
-            <!-- <el-input style="width: 12rem"></el-input> -->
-            <el-date-picker v-model="startCheckInTime" type="datetime" style="width: 12rem" placeholder="开始时间" />
-          </el-form-item>
-          <el-form-item label="结束时间" prop="time">
-            <!-- <el-input style="width: 12rem"></el-input> -->
-            <el-date-picker v-model="endCheckInTime" type="datetime" style="width: 12rem" placeholder="结束时间" />
+          <el-form-item label="签到码" v-if="checkInTypeKey === CODECHECK">
+            <el-input v-model="checkCode" placeholder="签到码" style="width: 12rem"></el-input>
           </el-form-item>
         </div>
       </el-form>
@@ -204,25 +225,31 @@ const cancelDelete = () => {};
   margin-top: 20px;
   margin-left: 20px;
   margin-right: 20px;
+
   .addCourse {
     margin-bottom: 10px;
   }
+
   .button1 {
     color: var(--v3-tagsview-tag-text-color);
   }
+
   .button2 {
     background-color: #f56c6c;
     color: white;
+
     :hover {
       background-color: #b25252;
     }
   }
 }
+
 .el-button.is-link {
   padding: 10px;
   margin-right: 10px;
   font-weight: 700;
 }
+
 .el-button.is-link:first-child {
   border: 1px solid var(--v3-tagsview-tag-border-color);
 }
@@ -230,12 +257,14 @@ const cancelDelete = () => {};
 .el-table .cell:last-child {
   text-align: center;
 }
+
 .el-button.is-link:not(.is-disabled):focus,
 .el-button.is-link:not(.is-disabled):hover {
   background-color: #b25252 !important;
   border: 1px solid #b25252;
   color: white;
 }
+
 .el-button.is-link:not(.is-disabled):first-child:focus,
 .el-button.is-link:first-child:hover {
   border: 1px solid #409eff !important;

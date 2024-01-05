@@ -1,13 +1,14 @@
 import request from "@/config/request";
 
-export function publishCheckInAPI({ className, TeacherName, code }: any) {
+export function publishCheckInAPI({ className, teacherName, code }: any) {
   return request.post({
-    url: "/teacher/addSign",
-    data: { className, TeacherName, code }
+    url: "/teacher/addsign",
+    data: { className, teacherName, code }
   });
 }
 
 export function getCheckRecordAPI({ teacherName, className }: any) {
+  console.log(teacherName, className);
   return request.get({
     url: "/teacher/getsign",
     params: { teacherName, className }
