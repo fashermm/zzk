@@ -38,7 +38,7 @@ export const joinLessonAPI = ({ className, teacherName }: any) => {
 
 export const getLessonByStudentAPI = (params: Record<string, any>) => {
   return request.get({
-    url: "/student/classinfo",
+    url: "/student/getclassinfo",
     params
   });
 };
