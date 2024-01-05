@@ -25,13 +25,13 @@ export function getStudentCheckRecordsAPI({ teacherName }: any) {
 export function getCheckInfoAPI({ studentName }: any) {
   return request.get({
     url: "/student/getsigninfo",
-    params: { studentName }
+    params: { studentName, teacherName: 'zzb' }
   });
 }
 
-export function checkInAPI(data: any) {
+export function checkInAPI({ teacherName, className }: any) {
   return request.post({
     url: "/student/sign",
-    data
+    data: { teacherName, className }
   });
 }

@@ -67,21 +67,20 @@ export const useCheckInStore = defineStore("checkIn", () => {
   //#endregion
 
   //#region student
-  const checkIn = (data: any) => {
-    checkInAPI(data)
-      .then((res) => {
-        console.log(res);
-        Promise.resolve("success");
-      })
-      .catch((err) => {
-        Promise.reject(err);
-      });
+  const checkIn = async (data: any) => {
+    try {
+      const res = await checkInAPI(data);
+      Promise.resolve(res.data);
+    }catch(err){
+      Promise.reject(err);
+    }
   };
   /* 学生查看自己签到情况 */
   const getCheckInfoByStudent = async () => {
     try {
       getCheckInfoAPI({ studentName: userStore.studentInfo.name }).then((res) => {
         console.log(res);
+        studentCheckInfo.value = res.data;
         return Promise.resolve(res.data);
       });
     } catch (err) {

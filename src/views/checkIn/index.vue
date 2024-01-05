@@ -42,12 +42,16 @@ const startCheckInTime = ref("");
 const endCheckInTime = ref("");
 const className = ref("");
 
-const checkIn = () => {
+const checkIn = (className: string, teacherName: string) => {
   try {
-    checkInStore.checkIn({ code: checkCode.value });
-    showCheckInDialog.value = false;
-    checkCode.value = "";
-    showMessage("签到成功", "success");
+    checkInStore.checkIn({ className, teacherName })
+      .then(() => {
+        showCheckInDialog.value = false;
+        checkCode.value = "";
+        showMessage("签到成功", "success");
+      }).then(() => {
+        checkInStore.getCheckInfoByStudent();
+      });
   } catch {
     showMessage("签到失败", "error");
   }
@@ -81,13 +85,15 @@ const deleteCheckIn = (idx: any) => {
   checkInStore.deleteCheck(idx);
 };
 
-const openCheckIn = (type: number) => {
-  if (type === TRIGGERCHECK) {
-    checkCode.value = "";
-    checkIn();
-  } else {
-    showCheckInDialog.value = true;
-  }
+const openCheckIn = (className: string, teacherName: string) => {
+  // if (type === TRIGGERCHECK) {
+  //   checkCode.value = "";
+  //   checkIn();
+  // } else {
+  //  
+  // }
+  showCheckInDialog.value = true;
+  checkIn(className, teacherName);
 };
 
 const handleClassSelect = () => {
@@ -143,17 +149,15 @@ onMounted(async () => {
         </el-table>
       </div>
       <div v-else class="table1">
-        <el-table :data="checkInRecords" style="width: 100%">
-          <el-table-column prop="className" label="签到标题" />
+        <el-table :data="studentCheckInfo" style="width: 100%">
+          <el-table-column prop="className" label="课程名字" />
           <el-table-column prop="teacherName" label="老师名字" />
-          <el-table-column prop="courseName" label="课程名称" />
-          <el-table-column prop="" label="开设时间" />
-          <el-table-column prop="" label="结束时间" />
-          <el-table-column prop="status" label="签到状态" />
+          <el-table-column prop="signTime" label="签到时间" />
+          <el-table-column prop="signStatus" label="签到状态" />
           <el-table-column prop="" label="操作">
             <template #default="scope">
-              <el-button size="small" type="primary" @click="openCheckIn(scope.row.type)"
-                :disabled="scope.row.status === '已签到'">签到
+              <el-button size="small" type="primary" @click="openCheckIn(scope.row.className, scope.row.teacherName)"
+                :disabled="scope.row.signStatus === '已签到'">签到
               </el-button>
             </template>
           </el-table-column>
