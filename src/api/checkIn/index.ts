@@ -25,7 +25,7 @@ export function getStudentCheckRecordsAPI({ teacherName }: any) {
 export function getCheckInfoAPI({ studentName }: any) {
   return request.get({
     url: "/student/getsigninfo",
-    params: { studentName, teacherName: 'zzb' }
+    params: { studentName, teacherName: 'joshua_teacher' }
   });
 }
 
